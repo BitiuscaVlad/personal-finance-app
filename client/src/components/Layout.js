@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import CurrencySelector from './CurrencySelector';
 import './Layout.css';
 
 const Layout = ({ children }) => {
@@ -30,6 +31,7 @@ const Layout = ({ children }) => {
               </NavLink>
             </li>
           </ul>
+          <CurrencySelector />
         </div>
       </nav>
       <main className="main-content">

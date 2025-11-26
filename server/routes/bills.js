@@ -58,13 +58,13 @@ router.get('/:id', (req, res) => {
 
 // Create bill
 router.post('/', (req, res) => {
-  const { name, amount, due_date, category_id, is_recurring, recurrence_interval, status } = req.body;
+  const { name, amount, due_date, category_id, is_recurring, recurrence_interval, status, currency } = req.body;
   const sql = `
-    INSERT INTO bills (name, amount, due_date, category_id, is_recurring, recurrence_interval, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO bills (name, amount, currency, due_date, category_id, is_recurring, recurrence_interval, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
   
-  db.run(sql, [name, amount, due_date, category_id, is_recurring || 0, recurrence_interval, status || 'pending'], function(err) {
+  db.run(sql, [name, amount, currency || 'RON', due_date, category_id, is_recurring || 0, recurrence_interval, status || 'pending'], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -72,7 +72,8 @@ router.post('/', (req, res) => {
     res.status(201).json({ 
       id: this.lastID, 
       name, 
-      amount, 
+      amount,
+      currency: currency || 'RON',
       due_date, 
       category_id,
       is_recurring,
@@ -84,14 +85,14 @@ router.post('/', (req, res) => {
 
 // Update bill
 router.put('/:id', (req, res) => {
-  const { name, amount, due_date, category_id, is_recurring, recurrence_interval, status } = req.body;
+  const { name, amount, due_date, category_id, is_recurring, recurrence_interval, status, currency } = req.body;
   const sql = `
     UPDATE bills 
-    SET name = ?, amount = ?, due_date = ?, category_id = ?, is_recurring = ?, recurrence_interval = ?, status = ?
+    SET name = ?, amount = ?, currency = ?, due_date = ?, category_id = ?, is_recurring = ?, recurrence_interval = ?, status = ?
     WHERE id = ?
   `;
   
-  db.run(sql, [name, amount, due_date, category_id, is_recurring, recurrence_interval, status, req.params.id], function(err) {
+  db.run(sql, [name, amount, currency || 'RON', due_date, category_id, is_recurring, recurrence_interval, status, req.params.id], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -103,7 +104,8 @@ router.put('/:id', (req, res) => {
     res.json({ 
       id: req.params.id, 
       name, 
-      amount, 
+      amount,
+      currency: currency || 'RON',
       due_date, 
       category_id,
       is_recurring,

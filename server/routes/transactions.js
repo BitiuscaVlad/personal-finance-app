@@ -1,6 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
+const { suggestCategory } = require('../services/aiCategorizationService');
+
+// AI-powered category suggestion
+router.post('/suggest-category', async (req, res) => {
+  try {
+    const { description } = req.body;
+    
+    if (!description || description.trim() === '') {
+      return res.status(400).json({ error: 'Description is required' });
+    }
+
+    const suggestion = await suggestCategory(description);
+    res.json(suggestion);
+  } catch (error) {
+    console.error('Error suggesting category:', error);
+    res.status(500).json({ error: error.message || 'Failed to suggest category' });
+  }
+});
 
 // Get all transactions
 router.get('/', (req, res) => {
@@ -61,20 +79,21 @@ router.get('/:id', (req, res) => {
 
 // Create transaction
 router.post('/', (req, res) => {
-  const { amount, category_id, description, date, is_recurring, recurrence_interval } = req.body;
+  const { amount, category_id, description, date, is_recurring, recurrence_interval, currency } = req.body;
   const sql = `
-    INSERT INTO transactions (amount, category_id, description, date, is_recurring, recurrence_interval)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO transactions (amount, currency, category_id, description, date, is_recurring, recurrence_interval)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   
-  db.run(sql, [amount, category_id, description, date, is_recurring || 0, recurrence_interval], function(err) {
+  db.run(sql, [amount, currency || 'RON', category_id, description, date, is_recurring || 0, recurrence_interval], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
     }
     res.status(201).json({ 
       id: this.lastID, 
-      amount, 
+      amount,
+      currency: currency || 'RON',
       category_id, 
       description, 
       date,
@@ -86,14 +105,14 @@ router.post('/', (req, res) => {
 
 // Update transaction
 router.put('/:id', (req, res) => {
-  const { amount, category_id, description, date, is_recurring, recurrence_interval } = req.body;
+  const { amount, category_id, description, date, is_recurring, recurrence_interval, currency } = req.body;
   const sql = `
     UPDATE transactions 
-    SET amount = ?, category_id = ?, description = ?, date = ?, is_recurring = ?, recurrence_interval = ?
+    SET amount = ?, currency = ?, category_id = ?, description = ?, date = ?, is_recurring = ?, recurrence_interval = ?
     WHERE id = ?
   `;
   
-  db.run(sql, [amount, category_id, description, date, is_recurring, recurrence_interval, req.params.id], function(err) {
+  db.run(sql, [amount, currency || 'RON', category_id, description, date, is_recurring, recurrence_interval, req.params.id], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -104,7 +123,8 @@ router.put('/:id', (req, res) => {
     }
     res.json({ 
       id: req.params.id, 
-      amount, 
+      amount,
+      currency: currency || 'RON',
       category_id, 
       description, 
       date,

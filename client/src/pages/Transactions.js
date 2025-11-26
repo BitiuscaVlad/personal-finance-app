@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories } from '../services/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, suggestCategory } from '../services/api';
 import './Transactions.css';
 
 const Transactions = () => {
@@ -9,6 +9,8 @@ const Transactions = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [filter, setFilter] = useState('all'); // all, income, expense
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
     category_id: '',
@@ -22,6 +24,36 @@ const Transactions = () => {
     loadCategories();
     loadTransactions();
   }, []);
+
+  // Debounced function to get AI category suggestion
+  const getSuggestion = useCallback(async (description) => {
+    if (!description || description.trim().length < 3) {
+      setAiSuggestion(null);
+      return;
+    }
+
+    setLoadingSuggestion(true);
+    try {
+      const response = await suggestCategory(description);
+      setAiSuggestion(response.data);
+    } catch (error) {
+      console.error('Error getting AI suggestion:', error);
+      setAiSuggestion(null);
+    } finally {
+      setLoadingSuggestion(false);
+    }
+  }, []);
+
+  // Debounce the AI suggestion call
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.description && !editingTransaction) {
+        getSuggestion(formData.description);
+      }
+    }, 800); // Wait 800ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [formData.description, editingTransaction, getSuggestion]);
 
   const loadCategories = async () => {
     try {
@@ -101,6 +133,14 @@ const Transactions = () => {
       is_recurring: false,
       recurrence_interval: 'monthly',
     });
+    setAiSuggestion(null);
+  };
+
+  const acceptAiSuggestion = () => {
+    if (aiSuggestion) {
+      setFormData({ ...formData, category_id: aiSuggestion.categoryId });
+      setAiSuggestion(null);
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -295,6 +335,36 @@ const Transactions = () => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="e.g., Grocery shopping at Walmart"
                 />
+                
+                {/* AI Suggestion */}
+                {loadingSuggestion && (
+                  <div className="ai-suggestion loading">
+                    <span className="ai-icon">🤖</span>
+                    <span>Analyzing description...</span>
+                  </div>
+                )}
+                
+                {aiSuggestion && !formData.category_id && !loadingSuggestion && (
+                  <div className="ai-suggestion">
+                    <div className="suggestion-header">
+                      <span className="ai-icon">🤖</span>
+                      <span className="suggestion-text">
+                        AI suggests: <strong>{aiSuggestion.categoryName}</strong>
+                      </span>
+                      <span className={`confidence-badge ${aiSuggestion.confidence}`}>
+                        {aiSuggestion.confidence}
+                      </span>
+                    </div>
+                    <p className="suggestion-reason">{aiSuggestion.reasoning}</p>
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-primary"
+                      onClick={acceptAiSuggestion}
+                    >
+                      Accept Suggestion
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">

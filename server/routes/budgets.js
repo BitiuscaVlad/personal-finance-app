@@ -91,10 +91,10 @@ router.get('/spending/:month/:year', (req, res) => {
 
 // Create budget
 router.post('/', (req, res) => {
-  const { category_id, amount, month, year } = req.body;
-  const sql = 'INSERT INTO budgets (category_id, amount, month, year) VALUES (?, ?, ?, ?)';
+  const { category_id, amount, month, year, currency } = req.body;
+  const sql = 'INSERT INTO budgets (category_id, amount, currency, month, year) VALUES (?, ?, ?, ?, ?)';
   
-  db.run(sql, [category_id, amount, month, year], function(err) {
+  db.run(sql, [category_id, amount, currency || 'RON', month, year], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE constraint failed')) {
         res.status(400).json({ error: 'Budget already exists for this category and month' });
@@ -103,16 +103,16 @@ router.post('/', (req, res) => {
       }
       return;
     }
-    res.status(201).json({ id: this.lastID, category_id, amount, month, year });
+    res.status(201).json({ id: this.lastID, category_id, amount, currency: currency || 'RON', month, year });
   });
 });
 
 // Update budget
 router.put('/:id', (req, res) => {
-  const { category_id, amount, month, year } = req.body;
-  const sql = 'UPDATE budgets SET category_id = ?, amount = ?, month = ?, year = ? WHERE id = ?';
+  const { category_id, amount, month, year, currency } = req.body;
+  const sql = 'UPDATE budgets SET category_id = ?, amount = ?, currency = ?, month = ?, year = ? WHERE id = ?';
   
-  db.run(sql, [category_id, amount, month, year, req.params.id], function(err) {
+  db.run(sql, [category_id, amount, currency || 'RON', month, year, req.params.id], function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
       return;
@@ -121,7 +121,7 @@ router.put('/:id', (req, res) => {
       res.status(404).json({ error: 'Budget not found' });
       return;
     }
-    res.json({ id: req.params.id, category_id, amount, month, year });
+    res.json({ id: req.params.id, category_id, amount, currency: currency || 'RON', month, year });
   });
 });
 

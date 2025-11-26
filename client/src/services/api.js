@@ -21,6 +21,7 @@ export const getTransaction = (id) => api.get(`/transactions/${id}`);
 export const createTransaction = (data) => api.post('/transactions', data);
 export const updateTransaction = (id, data) => api.put(`/transactions/${id}`, data);
 export const deleteTransaction = (id) => api.delete(`/transactions/${id}`);
+export const suggestCategory = (description) => api.post('/transactions/suggest-category', { description });
 
 // Budgets
 export const getBudgets = (params) => api.get('/budgets', { params });
@@ -41,5 +42,13 @@ export const deleteBill = (id) => api.delete(`/bills/${id}`);
 export const getDashboardSummary = () => api.get('/dashboard/summary');
 export const getSpendingByCategory = () => api.get('/dashboard/spending-by-category');
 export const getRecentTransactions = (limit = 5) => api.get('/dashboard/recent-transactions', { params: { limit } });
+
+// Currency
+export const getExchangeRates = () => api.get('/currency/rates');
+export const convertCurrency = (data) => api.post('/currency/convert', data);
+export const getCurrencyPreference = () => api.get('/currency/preference');
+export const setCurrencyPreference = (displayCurrency) => api.put('/currency/preference', { displayCurrency });
+export const getCurrencies = () => api.get('/currency/currencies');
+export const updateRates = () => api.post('/currency/update-rates');
 
 export default api;
