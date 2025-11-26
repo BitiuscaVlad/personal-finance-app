@@ -1,0 +1,64 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Client build artifacts (will be built in Docker)
+client/build
+client/.env.local
+client/.env.development.local
+client/.env.test.local
+client/.env.production.local
+
+# Server files
+server/node_modules
+
+# Test files
+**/__tests__
+**/*.test.js
+**/jest.config.js
+**/setupTests.js
+server/test-*.js
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# CI/CD
+.github
+azure-pipelines.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database (production will create its own)
+*.db
+*.sqlite
+*.sqlite3
+server/data
+
+# Logs
+logs
+*.log
+
+# Coverage
+coverage
+.nyc_output
